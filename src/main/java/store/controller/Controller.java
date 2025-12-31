@@ -7,6 +7,8 @@ import store.domain.Inventory;
 import store.domain.Order;
 import store.domain.ProductLoader;
 import store.domain.PromotionVerifier;
+import store.domain.Receipt;
+import store.domain.ReceiptCalculator;
 import store.view.InputView;
 import store.view.OutputView;
 
@@ -24,17 +26,41 @@ public class Controller {
     }
 
     public void run() {
-        outputView.printMessage("안녕하세요. W편의점입니다.\n");
-
         Inventory inventory = loader.load();
+
+        // 전체 흐름 반복 (재구매)
+        boolean shopping = true;
+        while (shopping) {
+            outputView.printMessage("안녕하세요. W편의점입니다.\n"); // 매 반복마다 인사? 요구사항 예시엔 처음에만 있음. 하지만 예시2 재구매시 다시 인사함.
+            // 요구사항: 재구매 시 "안녕하세요..."부터 다시 출력
+            processOrderSequence(inventory);
+            shopping = askForAdditionalPurchase();
+        }
+    }
+
+    private void processOrderSequence(Inventory inventory) {
         outputView.printInventory(inventory);
+
         Order order = getValidOrder(inventory);
 
+        // 1. 프로모션 혜택 안내 (증정품 추가 여부)
         processFreeGift(order, inventory);
+
+        // 2. 재고 부족 안내 (정가 결제 여부)
         processStockShortage(order, inventory);
 
-        boolean validMembership = getValidMembership();
+        // 3. 멤버십 할인 여부
+        boolean applyMembership = getValidMembership();
 
+        // 4. 최종 계산
+        ReceiptCalculator calculator = new ReceiptCalculator(inventory);
+        Receipt receipt = calculator.calculate(order, applyMembership);
+
+        // 5. 영수증 출력
+        outputView.printReceipt(receipt, inventory);
+
+        // 6. 재고 차감
+        inventory.updateStock(order);
     }
 
     private boolean getValidMembership() {
@@ -47,6 +73,12 @@ public class Controller {
             } catch (IllegalArgumentException e) {
                 outputView.printMessage(e.getMessage());
             }
+        }
+    }
+
+    private void validateYesNo(String input) {
+        if (!"Y".equalsIgnoreCase(input) && !"N".equalsIgnoreCase(input)) {
+            throw new IllegalArgumentException("[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.");
         }
     }
 
@@ -90,6 +122,19 @@ public class Controller {
                 inventory.validateOrder(order);
                 return order;
 
+            } catch (IllegalArgumentException e) {
+                outputView.printMessage(e.getMessage());
+            }
+        }
+    }
+
+    private boolean askForAdditionalPurchase() {
+        while (true) {
+            try {
+                outputView.printMessage("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+                String response = inputView.readYesNo();
+                validateYesNo(response);
+                return "Y".equalsIgnoreCase(response);
             } catch (IllegalArgumentException e) {
                 outputView.printMessage(e.getMessage());
             }

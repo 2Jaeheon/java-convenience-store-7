@@ -76,4 +76,28 @@ public class Inventory {
             }
         }
     }
+
+    public void updateStock(Order order) {
+        Map<String, Integer> items = order.getOrder();
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            String name = entry.getKey();
+            int quantityToReduce = entry.getValue();
+            reduceProductStock(name, quantityToReduce);
+        }
+    }
+
+    private void reduceProductStock(String name, int quantity) {
+        List<Product> productList = products.get(name);
+        for (Product product : productList) {
+            if (quantity <= 0) {
+                break;
+            }
+
+            int currentStock = product.getQuantity();
+            int reduction = Math.min(currentStock, quantity);
+
+            product.decreaseQuantity(reduction);
+            quantity -= reduction;
+        }
+    }
 }
