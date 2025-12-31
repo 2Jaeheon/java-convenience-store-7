@@ -65,9 +65,11 @@ public class Inventory {
 
             int requestedQuantity = order.getQuantity(name);
 
-            int totalStock = products.get(name).stream()
-                    .mapToInt(Product::getQuantity)
-                    .sum();
+            int totalStock = 0;
+            List<Product> productList = products.get(name);
+            for (Product product : productList) {
+                totalStock += product.getQuantity();
+            }
 
             if (requestedQuantity > totalStock) {
                 throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
