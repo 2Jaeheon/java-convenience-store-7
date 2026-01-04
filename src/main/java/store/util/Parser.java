@@ -2,25 +2,25 @@ package store.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import store.domain.Order;
+import store.domain.OrderRequest;
 
 public class Parser {
-    public List<Order> parseOrders(String raw) {
+    public List<OrderRequest> parseOrders(String raw) {
         validateInput(raw);
-        List<Order> orders = new ArrayList<>();
+        List<OrderRequest> orderRequests = new ArrayList<>();
 
         String[] parts = raw.split(",");
 
         for (String part : parts) {
             String content = removeBrackets(part);
-            Order order = parseSingleOrder(content);
-            orders.add(order);
+            OrderRequest orderRequest = parseSingleOrder(content);
+            orderRequests.add(orderRequest);
         }
 
-        return orders;
+        return orderRequests;
     }
 
-    private Order parseSingleOrder(String input) {
+    private OrderRequest parseSingleOrder(String input) {
         String[] parts = input.split("-");
 
         if (parts.length != 2) {
@@ -37,7 +37,7 @@ public class Parser {
             throw new IllegalArgumentException("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
         }
 
-        return new Order(name, quantity);
+        return new OrderRequest(name, quantity);
     }
 
     private String removeBrackets(String input) {
